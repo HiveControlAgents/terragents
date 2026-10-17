@@ -1,5 +1,6 @@
 {
   "maxAttempts": 5,
+  "maxWorkers": 3,
   "maxMinutesPerTask": 45,
   "maxUsdPerTask": 1.5,
   "dailyUsd": 0.33,

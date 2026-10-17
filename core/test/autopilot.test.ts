@@ -119,6 +119,29 @@ describe('Autopilot', () => {
     expect(fm.tasks.get(t.id)!.status).toBe('cancelled');
   });
 
+  it('hires an off-shift worker when a ready task waits for a busy assignee', async () => {
+    const { fm } = setup({ maxWorkers: 3 });
+    fm.setAgent('kit', { active: true });
+    const busy = fm.tasks.create({ title: 'em andamento', createdBy: 'marlow', assignee: 'kit' });
+    fm.tasks.setStatus(busy.id, 'doing', { force: true });
+    fm.setAgent('kit', { taskId: busy.id, state: 'editing' });
+    const waiting = fm.tasks.create({ title: 'parada', createdBy: 'marlow', assignee: 'kit' });
+    const hired = ap.hire();
+    expect(hired).toBeDefined();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(fm.agent(hired!)!.active).toBe(true);
+    expect(fm.tasks.get(waiting.id)!.assignee).toBe(hired);
+  });
+
+  it('does not hire past maxWorkers', () => {
+    const { fm } = setup({ maxWorkers: 1 });
+    fm.setAgent('kit', { active: true });
+    const busy = fm.tasks.create({ title: 'em andamento', createdBy: 'marlow', assignee: 'kit' });
+    fm.setAgent('kit', { taskId: busy.id });
+    fm.tasks.create({ title: 'parada', createdBy: 'marlow', assignee: 'kit' });
+    expect(ap.hire()).toBeUndefined();
+  });
+
   it('never cancels a task that already reached review', () => {
     const { fm } = setup({ maxUsdPerTask: 1 });
     const t = fm.tasks.create({ title: 'pronta', createdBy: 'marlow', assignee: 'kit' });

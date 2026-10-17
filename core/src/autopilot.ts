@@ -19,6 +19,8 @@ import { run } from './util/proc.js';
 
 export interface Policy {
   maxAttempts: number;
+  /** the autopilot puts more workers on shift (up to this many) when ready tasks wait for a busy assignee; 0 = never */
+  maxWorkers: number;
   maxMinutesPerTask: number;
   maxUsdPerTask: number;
   /** estimated USD per day; 0 = no cap */
@@ -36,6 +38,7 @@ export interface Policy {
 
 export const DEFAULT_POLICY: Policy = {
   maxAttempts: 5,
+  maxWorkers: 3,
   maxMinutesPerTask: 45,
   maxUsdPerTask: 1.5,
   dailyUsd: 0.33,
@@ -51,7 +54,7 @@ export function loadPolicy(file: string): Policy {
   const push = p.push as unknown;
   p.push = push === true ? 'direct' : push === false ? 'off' : (push as Policy['push']);
   if (!['direct', 'pr', 'off'].includes(p.push)) throw new Error('policy.json: push must be "direct", "pr" or "off"');
-  for (const k of ['maxAttempts', 'maxMinutesPerTask', 'maxUsdPerTask', 'dailyUsd'] as const) {
+  for (const k of ['maxAttempts', 'maxWorkers', 'maxMinutesPerTask', 'maxUsdPerTask', 'dailyUsd'] as const) {
     if (typeof p[k] !== 'number' || !(p[k] >= 0)) throw new Error(`policy.json: ${k} must be a number >= 0`);
   }
   if (p.permissions.default !== 'Allow once' && p.permissions.default !== 'Deny') throw new Error('policy.json: permissions.default must be "Allow once" or "Deny"');
@@ -112,7 +115,10 @@ export class Autopilot {
     });
     // decisions left open by a previous run
     for (const d of this.fm.decisions.open()) if (this.handles(d)) this.queue(() => this.answer(d));
-    this.timer = setInterval(() => this.checkTasks(), 60_000);
+    this.timer = setInterval(() => {
+      this.checkTasks();
+      this.hire();
+    }, 60_000);
     this.timer.unref?.();
     this.checkBudget();
   }
@@ -245,6 +251,28 @@ export class Autopilot {
       this.say(`cancelou ${t.id} (${why}); dá para tentar de novo com retry`);
       this.fm.taskAction(t.id, 'cancel');
     }
+  }
+
+  // ---- hiring ---------------------------------------------------------------------------------
+
+  /**
+   * A ready task whose assignee is busy with another one waits for nothing: put an off-shift worker on
+   * it (spawn + reassign), up to policy.maxWorkers workers on shift. Never while the budget pause is on.
+   */
+  hire(): string | undefined {
+    if (!this.policy.maxWorkers || this.state.budgetDecision) return undefined;
+    const workers = this.fm.agents().filter((a) => a.role !== 'lead');
+    const onShift = workers.filter((a) => a.active);
+    if (onShift.length >= this.policy.maxWorkers) return undefined;
+    const waiting = this.fm.tasks.ready().find((t) => {
+      const who = t.assignee ? this.fm.agent(t.assignee) : undefined;
+      return !who || (who.taskId !== undefined && who.taskId !== t.id);
+    });
+    const hire = workers.find((a) => !a.active);
+    if (!waiting || !hire) return undefined;
+    this.say(`contratou ${hire.name} para ${waiting.id} (${waiting.title}): o time estava ocupado`, hire.id);
+    void Promise.resolve(this.fm.agentAction(hire.id, 'spawn', waiting.id)).catch((e) => this.fm.log.warn(`hire ${hire.id}: ${(e as Error).message}`));
+    return hire.id;
   }
 
   // ---- daily budget -------------------------------------------------------------------------

@@ -77,6 +77,7 @@ Opções úteis: `--workers 2`, `--lead-model sonnet --worker-model sonnet`, `--
 | Campo | Padrão | O que faz |
 | --- | --- | --- |
 | `maxAttempts` | 5 | rodadas de correção antes de rejeitar a tarefa |
+| `maxWorkers` | 3 | quando uma tarefa pronta espera por alguém ocupado, o piloto contrata mais um agente, até esse limite |
 | `maxMinutesPerTask` | 45 | tarefa em andamento além disso é cancelada (dá para `retry`) |
 | `maxUsdPerTask` | 1,5 | custo estimado máximo por tarefa |
 | `dailyUsd` | 0,33 | teto do dia; ao chegar, pausa e pergunta |
@@ -112,7 +113,6 @@ Testes: `cd core && npm test`.
 ## O que vem por aí
 
 - Balões de conversa entre agentes e vida/cansaço visíveis na cidade.
-- O time contratar um agente novo sozinho quando faltar gente.
 - Vários projetos ao mesmo tempo, cada um num bairro.
 - Multiplayer no Terraria.
 
