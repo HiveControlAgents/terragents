@@ -11,6 +11,7 @@
   "scripts": {
     "start": "node --import tsx src/main.ts",
     "tui": "node --import tsx scripts/fake-mod.ts",
+    "answer": "node --import tsx scripts/answer.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "gen:protocol-doc": "node --import tsx scripts/gen-protocol-doc.ts",
