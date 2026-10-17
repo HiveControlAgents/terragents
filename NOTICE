@@ -1,0 +1,10 @@
+TerrAgents
+Copyright (c) 2026 Isaque Moutta
+
+Este projeto nasceu de um fork do AgentCraft (https://github.com/blendi-remade/agentcraft),
+Copyright (c) 2026 AgentCraft contributors, licenciado sob MIT. O arquivo LICENSE é o original
+do AgentCraft e continua valendo para o código herdado (pasta core/, protocol/ e docs/agentcraft-spec-original.md).
+Fork feito a partir do commit 8fe3ad23489b06f9142c6382bc23d31090c6b406 em 17/10/2026.
+
+Terraria e tModLoader não fazem parte deste repositório. O mod referencia o jogo, que cada pessoa
+precisa ter comprado; nenhum sprite, som ou arquivo do Terraria é distribuído aqui.

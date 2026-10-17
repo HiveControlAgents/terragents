@@ -1,0 +1,7 @@
+node_modules/
+.agentaria-home/
+.terragents-home/
+*.log
+.env
+.env.*
+core/dist/
