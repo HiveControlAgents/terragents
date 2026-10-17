@@ -10,7 +10,7 @@ namespace TerrAgents.Commands
 	{
 		public override string Command => "ta";
 		public override CommandType Type => CommandType.Chat;
-		public override string Usage => "/ta status | /ta meta <texto> | /ta responder <id> <opção> | /ta falar <agente> <texto>";
+		public override string Usage => "/ta status | /ta construir | /ta meta <texto> | /ta responder <id> <opção> | /ta falar <agente> <texto>";
 		public override string Description => "Fala com o TerrAgents Core";
 
 		public override void Action(CommandCaller caller, string input, string[] args)
@@ -25,6 +25,11 @@ namespace TerrAgents.Commands
 				case "responder" when args.Length > 2:
 					ForemanClient.Send(new Dictionary<string, object> { ["type"] = "decision.answer", ["decisionId"] = args[1], ["option"] = Rest(2) });
 					caller.Reply($"Resposta enviada para {args[1]}.");
+					break;
+				case "construir":
+					var p = caller.Player;
+					CitySystem.Build((int)(p.Center.X / 16f), (int)(p.Bottom.Y / 16f));
+					caller.Reply($"Cidade construída: {CitySystem.Order.Length} escritórios em volta de você. Os agentes vão se mudar.");
 					break;
 				case "falar" when args.Length > 2:
 					ForemanClient.Send(new Dictionary<string, object> { ["type"] = "user.message", ["to"] = args[1], ["text"] = Rest(2) });

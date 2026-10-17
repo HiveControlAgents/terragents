@@ -45,7 +45,7 @@ namespace TerrAgents.NPCs
 			NPC.timeLeft = NPC.activeTime;
 			if (!ForemanClient.Agents.TryGetValue(AgentId, out var a)) return;
 			NPC.GivenName = a.Name;
-			float targetX = (CitySystem.StationX(a.Station, Main.LocalPlayer) + CitySystem.Slot(a) * 4) * 16f;
+			float targetX = (CitySystem.StationX(a.Station, Main.LocalPlayer) + CitySystem.Slot(a)) * 16f;
 			float dx = targetX - NPC.Center.X;
 			bool moving = !a.Paused && System.Math.Abs(dx) > 24f;
 			float speed = a.State is "running" or "testing" ? 2.4f : 1.4f;

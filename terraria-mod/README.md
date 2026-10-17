@@ -14,4 +14,6 @@ Não decide nada. Usa o sprite do Guia do próprio Terraria da pessoa; nenhum ar
 
 - Os agentes no turno aparecem perto do spawn e andam até a estação do que fazem:
   reunião, biblioteca e mesa à esquerda; descanso no centro; terminal, testes e merge à direita.
+- `/ta construir` constrói a cidade onde você está: um escritório por setor, com móveis e placa, que os
+  agentes do setor dividem. Ela sobrescreve o terreno ali e fica salva no mundo (use um mundo de teste).
 - `/ta` mostra o estado. `/ta meta <texto>` manda uma meta. `/ta responder d3 Merge`. `/ta falar kit <texto>`.
