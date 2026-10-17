@@ -45,7 +45,7 @@ namespace TerrAgents.NPCs
 			NPC.timeLeft = NPC.activeTime;
 			if (!ForemanClient.Agents.TryGetValue(AgentId, out var a)) return;
 			NPC.GivenName = a.Name;
-			float targetX = CitySystem.StationX(a.Station, Main.LocalPlayer) * 16f;
+			float targetX = (CitySystem.StationX(a.Station, Main.LocalPlayer) + CitySystem.Slot(a) * 4) * 16f;
 			float dx = targetX - NPC.Center.X;
 			bool moving = !a.Paused && System.Math.Abs(dx) > 24f;
 			float speed = a.State is "running" or "testing" ? 2.4f : 1.4f;
@@ -61,6 +61,7 @@ namespace TerrAgents.NPCs
 			var top = NPC.Top - screenPos;
 			Utils.DrawBorderString(spriteBatch, a.Name, top + new Vector2(0f, -38f), a.Color, 0.9f, 0.5f, 0f);
 			var line = a.Paused ? "pausado" : a.Activity;
+			if (line.Length > 26) line = line.Substring(0, 25) + "…";
 			if (!string.IsNullOrEmpty(line))
 				Utils.DrawBorderString(spriteBatch, line, top + new Vector2(0f, -20f), StateColor(a.State), 0.7f, 0.5f, 0f);
 		}

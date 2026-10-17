@@ -27,6 +27,15 @@ namespace TerrAgents.Systems
 			return Main.spawnTileX + (Offsets.TryGetValue(station, out var dx) ? dx : 0);
 		}
 
+		/// <summary>Position of an agent among those at the same station (0, 1, 2...), so they stand side by side.</summary>
+		public static int Slot(AgentInfo agent)
+		{
+			int slot = 0;
+			foreach (var other in ForemanClient.Agents.Values)
+				if (other.Active && other.Station == agent.Station && string.CompareOrdinal(other.Id, agent.Id) < 0) slot++;
+			return slot;
+		}
+
 		public override void OnWorldUnload() => Spawned.Clear();
 
 		public override void PostUpdateWorld()
