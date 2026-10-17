@@ -103,17 +103,22 @@ namespace TerrAgents.Systems
 			Solid(left - 3, floorY + 1, TileID.GrayBrick);
 			Solid(left + Width + 2, floorY + 1, TileID.GrayBrick);
 
+			// wooden floor planks over the foundation, inside the hall. Laid BEFORE any furniture: replacing
+			// a floor tile later breaks whatever stands on it (that is what wrecked the decoration)
+			for (int x = left; x < left + Width; x++) Solid(x, floorY, TileID.WoodBlock);
+
+			// structure first (pillars, walls, beams, roofs), then light and furniture once nothing moves
 			for (int i = 0; i < Order.Length; i++)
 			{
 				int x0 = left + i * Room;               // this office's left pillar
-				int inner0 = x0 + Pillar, inner1 = x0 + Room - 1;
-				BuildOffice(Order[i], x0, inner0, inner1, floorY, ceiling);
+				BuildOffice(x0, x0 + Pillar, x0 + Room - 1, floorY, ceiling);
 			}
-			// closing pillar on the right
-			BuildPillar(left + Width - Pillar, floorY, ceiling, arch: true);
-
-			// wooden floor planks over the foundation, inside the hall
-			for (int x = left; x < left + Width; x++) Solid(x, floorY, TileID.WoodBlock);
+			BuildPillar(left + Width - Pillar, floorY, ceiling, arch: true); // closing pillar on the right
+			for (int i = 0; i < Order.Length; i++)
+			{
+				int x0 = left + i * Room;
+				Decorate(Order[i], x0 + Pillar, x0 + Room - 1, floorY, ceiling);
+			}
 
 			WorldGen.RangeFrame(left - 4, top - 3, left + Width + 4, floorY + 4);
 			Origin = new Point(left, floorY);
@@ -137,7 +142,7 @@ namespace TerrAgents.Systems
 			Solid(x0 + Pillar - 1, floorY - 5, TileID.GrayBrick);
 		}
 
-		private static void BuildOffice(string station, int x0, int inner0, int inner1, int floorY, int ceiling)
+		private static void BuildOffice(int x0, int inner0, int inner1, int floorY, int ceiling)
 		{
 			BuildPillar(x0, floorY, ceiling, arch: true);
 
@@ -169,6 +174,11 @@ namespace TerrAgents.Systems
 				for (int x = a + 1; x < b; x++) Back(x, y, WallID.Wood);
 			}
 
+		}
+
+		private static void Decorate(string station, int inner0, int inner1, int floorY, int ceiling)
+		{
+			int mid = (inner0 + inner1) / 2;
 			// light: a chandelier in the middle, lanterns by the windows
 			WorldGen.PlaceObject(mid, ceiling + 1, TileID.Chandeliers, mute: true);
 			WorldGen.PlaceObject(inner0 + 1, ceiling + 1, TileID.HangingLanterns, mute: true);
