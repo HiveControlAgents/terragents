@@ -25,8 +25,12 @@ export interface Policy {
   dailyUsd: number;
   /** merges need a passing test run (ci "pass"); false also merges when no tests ran */
   requireTests: boolean;
-  /** push the base branch to origin after every merge */
-  push: boolean;
+  /**
+   * after every merge: "direct" pushes the base branch to origin; "pr" pushes it to a new branch
+   * and opens a pull request for a human to merge (protected main branches); "off" keeps it local.
+   * true/false from older files mean "direct"/"off".
+   */
+  push: 'direct' | 'pr' | 'off';
   permissions: { allow: string[]; default: 'Allow once' | 'Deny' };
 }
 
@@ -36,7 +40,7 @@ export const DEFAULT_POLICY: Policy = {
   maxUsdPerTask: 1.5,
   dailyUsd: 0.33,
   requireTests: true,
-  push: true,
+  push: 'direct',
   permissions: { allow: [], default: 'Deny' },
 };
 
@@ -44,6 +48,9 @@ export function loadPolicy(file: string): Policy {
   if (!fs.existsSync(file)) return structuredClone(DEFAULT_POLICY);
   const raw = JSON.parse(fs.readFileSync(file, 'utf8')) as Partial<Policy>;
   const p: Policy = { ...structuredClone(DEFAULT_POLICY), ...raw, permissions: { ...DEFAULT_POLICY.permissions, ...(raw.permissions ?? {}) } };
+  const push = p.push as unknown;
+  p.push = push === true ? 'direct' : push === false ? 'off' : (push as Policy['push']);
+  if (!['direct', 'pr', 'off'].includes(p.push)) throw new Error('policy.json: push must be "direct", "pr" or "off"');
   for (const k of ['maxAttempts', 'maxMinutesPerTask', 'maxUsdPerTask', 'dailyUsd'] as const) {
     if (typeof p[k] !== 'number' || !(p[k] >= 0)) throw new Error(`policy.json: ${k} must be a number >= 0`);
   }
@@ -77,7 +84,10 @@ export class Autopilot {
   constructor(
     private fm: Foreman,
     readonly policy: Policy,
-    private opts: { push?: (repoPath: string, branch: string) => Promise<string> } = {},
+    private opts: {
+      push?: (repoPath: string, branch: string) => Promise<string>;
+      openPr?: (repoPath: string, branch: string, title: string, body: string) => Promise<string>;
+    } = {},
   ) {}
 
   get state(): AutopilotState {
@@ -160,7 +170,8 @@ export class Autopilot {
         return;
       }
       this.say(`fez o merge de ${task?.id ?? d.worktree} (testes: ${ci})`, d.agentId);
-      if (this.policy.push && d.repoId) await this.pushBase(d.repoId);
+      if (d.repoId && this.policy.push === 'direct') await this.pushBase(d.repoId);
+      if (d.repoId && this.policy.push === 'pr') await this.openPr(d.repoId, task);
       return;
     }
     const id = task?.id ?? d.id;
@@ -186,6 +197,21 @@ export class Autopilot {
     } catch (e) {
       this.fm.bus.feed('error', `Piloto automático: push de ${repo.branch} falhou: ${(e as Error).message}`);
       this.fm.notify('warn', `Push de ${repo.branch} falhou: ${(e as Error).message}`);
+    }
+  }
+
+  private async openPr(repoId: string, task: Task | undefined): Promise<void> {
+    const repo = this.fm.repos.get(repoId);
+    if (!repo) return;
+    const title = task ? `${task.id}: ${task.title}` : `TerrAgents: merge em ${repo.branch}`;
+    const body = ['Aberto pelo piloto automático do TerrAgents depois do merge local com testes verdes.', task?.summary ? `Resumo do agente: ${task.summary}` : ''].filter(Boolean).join('\n\n');
+    try {
+      const url = await (this.opts.openPr ?? gitOpenPr)(repo.path, repo.branch, title, body);
+      this.fm.bus.feed('merge', `Piloto automático: PR aberto para ${repo.branch}: ${url}`);
+      this.fm.notify('need_user', `PR para revisar: ${url}`);
+    } catch (e) {
+      this.fm.bus.feed('error', `Piloto automático: abrir PR falhou: ${(e as Error).message}`);
+      this.fm.notify('warn', `Abrir PR falhou: ${(e as Error).message}`);
     }
   }
 
@@ -286,6 +312,17 @@ export class Autopilot {
     this.state.pausedByBudget = [];
     for (const id of ids) void Promise.resolve(this.fm.agentAction(id, 'resume')).catch((e) => this.fm.log.warn(`resume ${id}: ${(e as Error).message}`));
   }
+}
+
+/** Push the local base to terragents/<timestamp> and open a PR; merging it stays with a human. */
+async function gitOpenPr(repoPath: string, branch: string, title: string, body: string): Promise<string> {
+  const env = { ...process.env, GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never' };
+  const head = `terragents/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}`;
+  const push = await run('git', ['-c', `core.hooksPath=${NO_HOOKS_DIR}`, 'push', 'origin', `${branch}:refs/heads/${head}`], { cwd: repoPath, env, timeoutMs: 120_000 });
+  if (push.code !== 0) throw new Error((push.stderr || push.stdout).trim().split('\n').pop() ?? 'git push failed');
+  const pr = await run('gh', ['pr', 'create', '--base', branch, '--head', head, '--title', title, '--body', body], { cwd: repoPath, env, timeoutMs: 120_000 });
+  if (pr.code !== 0) throw new Error((pr.stderr || pr.stdout).trim().split('\n').pop() ?? 'gh pr create failed');
+  return pr.stdout.trim().split('\n').pop() ?? '';
 }
 
 /** The Foreman's own git never uses a transport; this push is the one deliberate exception. */

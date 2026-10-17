@@ -14,10 +14,10 @@ afterEach(async () => {
   rmrf(home);
 });
 
-function setup(policy: Partial<Policy> = {}, push?: (p: string, b: string) => Promise<string>): Harness {
+function setup(policy: Partial<Policy> = {}, push?: (p: string, b: string) => Promise<string>, openPr?: (p: string, b: string, t: string, body: string) => Promise<string>): Harness {
   home = tempDir();
   h = makeForeman(home, ['--backend', 'sim']);
-  ap = new Autopilot(h.fm, { ...structuredClone(DEFAULT_POLICY), ...policy }, push ? { push } : {});
+  ap = new Autopilot(h.fm, { ...structuredClone(DEFAULT_POLICY), ...policy }, { ...(push ? { push } : {}), ...(openPr ? { openPr } : {}) });
   h.fm.autopilot = ap;
   ap.start();
   return h;
@@ -77,6 +77,22 @@ describe('Autopilot', () => {
     expect(pushed).toEqual(['/repo#main']);
   });
 
+  it('with push "pr" opens a pull request after the merge and asks a human to review it', async () => {
+    const prs: string[] = [];
+    const { fm } = setup({ push: 'pr' }, undefined, async (p, b, title) => {
+      prs.push(`${p}#${b}#${title}`);
+      return 'https://github.com/o/r/pull/7';
+    });
+    const t = fm.tasks.create({ title: 'verde', createdBy: 'marlow', assignee: 'kit' });
+    fm.tasks.update(t.id, { ci: 'pass' });
+    vi.spyOn(fm.repos, 'get').mockReturnValue({ id: 'r', path: '/repo', branch: 'main' } as never);
+    vi.spyOn(fm, 'answerDecision').mockImplementation(async (id) => ({ ...fm.decisions.get(id)!, status: 'answered' }) as Decision);
+    fm.createDecision({ agentId: 'marlow', kind: 'merge', question: 'Merge?', options: ['Merge', 'Request changes', 'Reject'], taskId: t.id, repoId: 'r', worktree: 'kit-t1' });
+    await ap.idle();
+    expect(prs).toEqual([`/repo#main#${t.id}: verde`]);
+    expect(h.events.some((e) => e.type === 'notify' && e.text.includes('pull/7'))).toBe(true);
+  });
+
   it('pauses everyone at the daily cap and asks the user; "continue" resumes', async () => {
     const { fm } = setup({ dailyUsd: 0.3 });
     fm.setAgent('kit', { active: true });
@@ -109,6 +125,8 @@ describe('Autopilot', () => {
     expect(loadPolicy(f)).toEqual(DEFAULT_POLICY);
     fs.writeFileSync(f, JSON.stringify({ dailyUsd: 1, permissions: { allow: ['^x'] } }));
     expect(loadPolicy(f)).toMatchObject({ dailyUsd: 1, maxAttempts: 5, permissions: { allow: ['^x'], default: 'Deny' } });
+    fs.writeFileSync(f, JSON.stringify({ push: true }));
+    expect(loadPolicy(f).push).toBe('direct');
     fs.writeFileSync(f, JSON.stringify({ dailyUsd: -1 }));
     expect(() => loadPolicy(f)).toThrow(/dailyUsd/);
   });

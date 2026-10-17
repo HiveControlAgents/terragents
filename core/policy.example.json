@@ -4,6 +4,6 @@
   "maxUsdPerTask": 1.5,
   "dailyUsd": 0.33,
   "requireTests": true,
-  "push": true,
+  "push": "direct",
   "permissions": { "allow": [], "default": "Deny" }
 }
