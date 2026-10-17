@@ -47,12 +47,19 @@ namespace TerrAgents.Systems
 		/// <summary>Where an agent stands inside its office when others share it.</summary>
 		public static int Slot(AgentInfo agent)
 		{
-			int n = 0;
-			foreach (var other in ForemanClient.Agents.Values)
-				if (other.Active && other.Station == agent.Station && string.CompareOrdinal(other.Id, agent.Id) < 0) n++;
+			int n = Rank(agent);
 			int side = n % 2 == 1 ? -1 : 1;
 			int step = (n + 1) / 2;
 			return side * Math.Min(step * 2, 5); // 0, -2, +2, -4, +4, -5, +5: up to 7 fit in one office
+		}
+
+		/// <summary>0 for the first agent in an office, 1 for the second... (by id, so it is stable).</summary>
+		public static int Rank(AgentInfo agent)
+		{
+			int n = 0;
+			foreach (var other in ForemanClient.Agents.Values)
+				if (other.Active && other.Station == agent.Station && string.CompareOrdinal(other.Id, agent.Id) < 0) n++;
+			return n;
 		}
 
 		public static int FloorY => Built ? Origin.Y : Main.spawnTileY;

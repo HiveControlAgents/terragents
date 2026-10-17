@@ -58,10 +58,11 @@ namespace TerrAgents.NPCs
 		public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
 		{
 			if (!ForemanClient.Agents.TryGetValue(AgentId, out var a)) return;
-			var top = NPC.Top - screenPos;
+			// neighbours in a shared office alternate label heights, so names do not overlap
+			var top = NPC.Top - screenPos - new Vector2(0f, CitySystem.Rank(a) % 2 * 34f);
 			Utils.DrawBorderString(spriteBatch, a.Name, top + new Vector2(0f, -38f), a.Color, 0.9f, 0.5f, 0f);
 			var line = a.Paused ? "pausado" : a.Activity;
-			if (line.Length > 26) line = line.Substring(0, 25) + "…";
+			if (line.Length > 20) line = line.Substring(0, 19) + "…";
 			if (!string.IsNullOrEmpty(line))
 				Utils.DrawBorderString(spriteBatch, line, top + new Vector2(0f, -20f), StateColor(a.State), 0.7f, 0.5f, 0f);
 		}
