@@ -11,7 +11,7 @@ do Terraria.
 > erros ou ações dos agentes, perda de dados, custos ou qualquer outro dano. Leia o [DISCLAIMER.md](DISCLAIMER.md)
 > antes de usar com agentes de verdade.
 
-![O salão de guilda no navegador, com o time trabalhando](docs/img/navegador.jpg)
+![O salão de guilda dentro do Terraria, com o time trabalhando](docs/img/terraria.png)
 
 *English summary at the end.*
 
@@ -53,6 +53,8 @@ npm run demo
 Abra **http://127.0.0.1:7878/**. Uma equipe simulada (sem IA, sem gasto) planeja e entrega uma funcionalidade
 num repositório de demonstração. Você vê o salão de guilda, o feed e as decisões.
 
+![A mesma cidade no navegador](docs/img/navegador.jpg)
+
 ## Com agentes de verdade
 
 1. Tenha uma chave da API da Anthropic em `ANTHROPIC_API_KEY`. Se for só para uso pessoal, também dá para
@@ -92,7 +94,6 @@ Precisa do Terraria e do [tModLoader](https://store.steampowered.com/app/1281930
 3. Com o Core ligado, entre num mundo. Os agentes aparecem como NPCs.
 4. Digite `/ta construir` num mundo de teste para levantar o salão de guilda, com um escritório por setor.
 
-![O salão de guilda dentro do Terraria](docs/img/terraria.png)
 
 Comandos no chat: `/ta` (estado), `/ta meta <texto>`, `/ta responder <id> <opção>`, `/ta falar <agente> <texto>`.
 
