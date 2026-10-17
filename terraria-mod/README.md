@@ -11,8 +11,8 @@ Não decide nada. Usa o sprite do Guia do próprio Terraria da pessoa; nenhum ar
    Sem o SDK, feche o tModLoader e compile pela linha de comando, com o .NET que vem junto com ele:
 
    ```
-   cd "C:\Program Files (x86)\Steam\steamapps\common	ModLoader"
-   dotnet\dotnet.exe tModLoader.dll -server -build "%USERPROFILE%\Documents\My Games\Terraria	ModLoader\ModSources\TerrAgents"
+   cd "C:\Program Files (x86)\Steam\steamapps\common\tModLoader"
+   dotnet\dotnet.exe tModLoader.dll -server -build "%USERPROFILE%\Documents\My Games\Terraria\tModLoader\ModSources\TerrAgents"
    ```
 
 4. Ligue o Core e entre num mundo single player.
