@@ -26,6 +26,18 @@ npm run tui         # cliente de terminal que fala o protocolo
 
 Com agentes de verdade: `ANTHROPIC_API_KEY` no ambiente e `npm run start -- --backend claude --repo <caminho>`.
 
+## Piloto automático (fase 1)
+
+Com `--backend claude` ou `codex`, ninguém precisa responder nada: o piloto automático (`core/src/autopilot.ts`)
+responde perguntas, permissões e merges seguindo `<home>/policy.json` (exemplo em `core/policy.example.json`).
+
+- Merge só com testes passando; com teste falhando, devolve para o agente até `maxAttempts` e depois rejeita.
+- Depois de cada merge faz `git push origin <base>`.
+- Tarefa que passa de `maxMinutesPerTask` ou `maxUsdPerTask` é cancelada (dá para `retry`).
+- Ao chegar em `dailyUsd` no dia, pausa todos e pergunta se continua. É a única pergunta que chega ao humano.
+
+Desligar: `--no-autopilot`.
+
 ## Origem
 
 Fork do [AgentCraft](https://github.com/blendi-remade/agentcraft) (MIT). Ver `NOTICE` e `LICENSE`.

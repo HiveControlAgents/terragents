@@ -107,6 +107,9 @@ export interface Config {
   codex: CodexConfig;
   engines: EngineChoice;
   sim: SimConfig;
+  /** autopilot answers decisions per <home>/policy.json (default: on, except the sim) */
+  autopilot: boolean;
+  policyFile: string;
 }
 
 type Flags = Record<string, string | boolean>;
@@ -207,7 +210,7 @@ export const KNOWN_FLAGS = new Set([
   'lead-model', 'worker-model', 'effort', 'lead-effort', 'max-turns', 'max-turns-lead', 'max-turns-worker',
   'max-concurrent', 'ci', 'max-budget', 'resume', 'lead-review', 'speed', 'seed', 'showcase', 'auto-answer',
   'ambient', 'lead-read-commands', 'lead-engine', 'worker-engine', 'engines', 'codex-path', 'codex-model', 'codex-lead-model',
-  'codex-worker-model', 'codex-effort', 'codex-lead-effort',
+  'codex-worker-model', 'codex-effort', 'codex-lead-effort', 'autopilot', 'policy',
 ]);
 
 function engineName(v: unknown, d: EngineName, what: string): EngineName {
@@ -331,6 +334,8 @@ export function loadConfig(argv: string[], env: NodeJS.ProcessEnv = process.env)
       autoAnswer: bool(flags['auto-answer'] ?? fileSim.autoAnswer, false),
       ambient: bool(flags.ambient ?? fileSim.ambient, true),
     },
+    autopilot: bool(flags.autopilot, backend !== 'sim'),
+    policyFile: str(flags.policy) ?? path.join(home, 'policy.json'),
   };
   if (cfg.sim.showcase) cfg.autostart = true;
   return cfg;
@@ -365,6 +370,8 @@ usage: npm run start -- [options]
   --showcase               run to the showcase checkpoint instantly and hold that static state
   --showcase late          hold the later state instead (blocked, error, done and running agents)
   --auto-answer            answer the scenario's own decisions (unattended runs)
+  --[no-]autopilot         answer every decision per policy.json (default: on, off for sim)
+  --policy <file>          autopilot policy (default <home>/policy.json)
   --no-ambient             no idle chatter while waiting on you
 
  claude backend

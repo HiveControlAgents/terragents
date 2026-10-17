@@ -1,0 +1,9 @@
+{
+  "maxAttempts": 5,
+  "maxMinutesPerTask": 45,
+  "maxUsdPerTask": 1.5,
+  "dailyUsd": 0.33,
+  "requireTests": true,
+  "push": true,
+  "permissions": { "allow": [], "default": "Deny" }
+}

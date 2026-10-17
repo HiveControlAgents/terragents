@@ -8,6 +8,7 @@ import { loadCast, type CastMember } from './cast.js';
 import type { Config } from './config.js';
 import { FOREMAN_VERSION } from './config.js';
 import { consoleLogger, type Ctx, type Logger } from './context.js';
+import type { Autopilot } from './autopilot.js';
 import { DecisionError, DecisionQueue, type CreateDecisionInput } from './decisions.js';
 import { Memory, MemoryError } from './memory.js';
 import { Notifier } from './notifier.js';
@@ -77,6 +78,8 @@ export class Foreman {
   readonly log: Logger;
   readonly cast: CastMember[];
   backend: Backend | undefined;
+  /** answers decisions instead of the user (TerrAgents phase 1); set before start() */
+  autopilot: Autopilot | undefined;
   status: ForemanStatus;
 
   private listeners = new Set<(m: Outbound) => void>();
@@ -348,6 +351,7 @@ export class Foreman {
 
   private onDecisionCreated(d: Decision): void {
     const who = this.nameOf(d.agentId);
+    if (this.autopilot?.handles(d)) return; // answered in a moment, nobody to bother
     const label = d.kind === 'merge' ? 'merge review' : d.kind === 'permission' ? 'permission' : 'question';
     this.bus.feed('decision', `${who} needs you (${label}): ${d.question}`, { agentId: d.agentId, to: 'user' });
     this.notify('need_user', `${who}: ${truncate(d.question, 120)}`, d.id);
@@ -645,6 +649,7 @@ export class Foreman {
     if (this.closed) return;
     this.closed = true;
     this.repos.stopPolling();
+    this.autopilot?.stop();
     try {
       await this.backend?.stop();
     } catch (e) {

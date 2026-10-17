@@ -7,6 +7,7 @@ import { SimBackend } from './agents/sim/index.js';
 import { DEFAULT_SIM_GOAL } from './agents/sim/scenario.js';
 import { FOREMAN_VERSION, HELP, loadConfig, type Config } from './config.js';
 import { consoleLogger } from './context.js';
+import { Autopilot, loadPolicy } from './autopilot.js';
 import { Foreman } from './foreman.js';
 import { ForemanServer } from './server.js';
 import { claimRunFiles, homeRunFile, liveOwner, profileRunFile, releaseRunFiles } from './runfile.js';
@@ -61,6 +62,10 @@ export async function main(argv: string[]): Promise<void> {
   }
 
   const foreman = new Foreman({ config: cfg, logger: log });
+  if (cfg.autopilot) {
+    foreman.autopilot = new Autopilot(foreman, loadPolicy(cfg.policyFile));
+    log.info(`autopilot on (policy: ${cfg.policyFile}${fs.existsSync(cfg.policyFile) ? '' : ', defaults'})`);
+  }
   const backend = cfg.backend === 'sim' ? new SimBackend(foreman, cfg.sim) : createTeam(foreman, cfg);
   const server = new ForemanServer(foreman, { host: cfg.host, port: cfg.port, allowBrowserOrigins: cfg.allowBrowserOrigins, validateOutbound: cfg.debug, log });
 
@@ -107,6 +112,7 @@ export async function main(argv: string[]): Promise<void> {
   process.on('unhandledRejection', (e) => log.error(`unhandled rejection: ${(e as Error)?.stack ?? e}`));
 
   await foreman.start(backend);
+  foreman.autopilot?.start();
   if (backend instanceof SimBackend && (cfg.autostart || cfg.goal)) {
     await backend.autostart(cfg.goal ?? DEFAULT_SIM_GOAL);
   } else if (cfg.goal) {
