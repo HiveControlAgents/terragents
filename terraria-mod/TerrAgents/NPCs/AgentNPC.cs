@@ -65,6 +65,19 @@ namespace TerrAgents.NPCs
 			if (line.Length > 20) line = line.Substring(0, 19) + "…";
 			if (!string.IsNullOrEmpty(line))
 				Utils.DrawBorderString(spriteBatch, line, top + new Vector2(0f, -20f), StateColor(a.State), 0.7f, 0.5f, 0f);
+			if (a.Energy >= 0f)
+			{
+				// energy bar: green rested, gold tired, red worn out
+				var bar = new Rectangle((int)(top.X - 16), (int)(top.Y - 6), 32, 4);
+				spriteBatch.Draw(Terraria.GameContent.TextureAssets.MagicPixel.Value, new Rectangle(bar.X - 1, bar.Y - 1, bar.Width + 2, bar.Height + 2), Color.Black);
+				var fill = a.Energy > 0.6f ? Color.LimeGreen : a.Energy > 0.3f ? Color.Gold : Color.OrangeRed;
+				spriteBatch.Draw(Terraria.GameContent.TextureAssets.MagicPixel.Value, new Rectangle(bar.X, bar.Y, (int)(bar.Width * a.Energy), bar.Height), fill);
+			}
+			if (a.Say != "" && Main.GameUpdateCount < a.SayUntil)
+			{
+				var say = a.Say.Length > 40 ? a.Say.Substring(0, 39) + "…" : a.Say;
+				Utils.DrawBorderString(spriteBatch, say, top + new Vector2(0f, -58f), Color.White, 0.75f, 0.5f, 0f);
+			}
 		}
 
 		private static Color StateColor(string state) => state switch

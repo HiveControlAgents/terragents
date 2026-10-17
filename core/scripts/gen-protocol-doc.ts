@@ -190,7 +190,7 @@ function build(): string {
 }
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const target = path.resolve(here, '..', '..', 'docs', 'protocol.md');
+const target = path.resolve(here, '..', '..', 'protocol', 'protocol.md');
 const md = build();
 if (process.argv.includes('--check')) {
   const cur = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '';

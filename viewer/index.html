@@ -105,7 +105,7 @@ function onMessage(m) {
       renderDecisions();
       break;
     case 'agent.upsert': upsertAgent(m.agent); break;
-    case 'agent.say': bubble(m.agentId, m.text); break;
+    case 'agent.say': bubble(m.agentId, m.text, m.to); break;
     case 'feed.add': addFeed(m.item); break;
     case 'goal.upsert': setGoal(m.goal); break;
     case 'foreman.status': setStatus(m.status); break;
@@ -118,11 +118,17 @@ function onMessage(m) {
 
 function upsertAgent(a) {
   const old = agents.get(a.id);
-  const next = { ...a, say: old && old.say, sayUntil: old && old.sayUntil, dir: old ? old.dir : 1 };
+  const next = { ...a, say: old && old.say, sayUntil: old && old.sayUntil, listen: old && old.listen, listenUntil: old && old.listenUntil, dir: old ? old.dir : 1 };
   agents.set(a.id, next);
   next.x = old ? old.x : stationX(next);
 }
-function bubble(id, text) { const a = agents.get(id); if (a) { a.say = text; a.sayUntil = performance.now() + 6000; } }
+function bubble(id, text, to) {
+  const a = agents.get(id); if (!a) return;
+  const target = to && to !== 'all' && to !== 'user' ? agents.get(to) : null;
+  a.say = (target ? `@${target.name} ` : to === 'user' ? '@você ' : '') + text;
+  a.sayUntil = performance.now() + 7000;
+  if (target) { target.listen = a.name; target.listenUntil = a.sayUntil; }
+}
 
 function setGoal(g) {
   document.getElementById('goal').textContent = g.text;
@@ -130,7 +136,8 @@ function setGoal(g) {
 }
 function setStatus(s) {
   if (!s) return;
-  document.getElementById('cost').textContent = `${s.backend === 'sim' ? 'simulado' : s.backend}${typeof s.costUsd === 'number' ? ` · US$ ${s.costUsd.toFixed(2)} estimado` : ''}`;
+  const day = typeof s.dayCapUsd === 'number' ? ` · hoje US$ ${(s.dayUsd || 0).toFixed(2)} de ${s.dayCapUsd.toFixed(2)}` : '';
+  document.getElementById('cost').textContent = `${s.backend === 'sim' ? 'simulado' : s.backend}${typeof s.costUsd === 'number' ? ` · US$ ${s.costUsd.toFixed(2)} no total` : ''}${day}`;
 }
 function addFeed(f) {
   const el = document.createElement('div');
@@ -289,6 +296,14 @@ function label(a, t) {
   if (act.length > 22) act = act.slice(0, 21) + '…';
   ctx.font = `${Math.max(10, Math.round(scale * 3.4))}px "Pixelify Sans", monospace`;
   outline(act, sx, sy, STATE_COLOR[a.state] || '#d8d2c4');
+  if (typeof a.energy === 'number') {
+    // energy bar: green when rested, amber, red when worn out
+    const bw = Math.round(scale * 10), bh = Math.max(3, Math.round(scale * 1.2)), bx = sx - bw / 2, by = sy + 4;
+    ctx.fillStyle = '#120f18'; ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+    ctx.fillStyle = a.energy > 0.6 ? '#8fd16a' : a.energy > 0.3 ? '#f2c14e' : '#e8664f';
+    ctx.fillRect(bx, by, Math.round(bw * a.energy), bh);
+  }
+  if (a.listen && t < a.listenUntil && !(a.say && t < a.sayUntil)) outline('…', sx, sy - Math.round(scale * 11), '#fffaf0');
   if (a.say && t < a.sayUntil) {
     const s = a.say.length > 46 ? a.say.slice(0, 45) + '…' : a.say;
     const w = ctx.measureText(s).width + 14, by = sy - Math.round(scale * 11) - 22;

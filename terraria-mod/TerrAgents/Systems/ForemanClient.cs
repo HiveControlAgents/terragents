@@ -24,6 +24,9 @@ namespace TerrAgents.Systems
 		public bool Active;
 		public bool Paused;
 		public Color Color = Color.White;
+		public float Energy = -1f;     // 0..1, -1 when the Core sends none
+		public string Say = "";
+		public uint SayUntil;           // Main.GameUpdateCount
 	}
 
 	/// <summary>
@@ -139,7 +142,11 @@ namespace TerrAgents.Systems
 					Upsert(m.GetProperty("agent"));
 					break;
 				case "agent.say":
-					Say(NameOf(Str(m, "agentId")) + ": " + Str(m, "text"), Color.White);
+					var speaker = Str(m, "agentId");
+					var to = Str(m, "to");
+					var text = (to != "" && to != "all" && to != "user" ? "@" + NameOf(to) + " " : "") + Str(m, "text");
+					if (Agents.TryGetValue(speaker, out var who)) { who.Say = text; who.SayUntil = Main.GameUpdateCount + 60 * 7; }
+					Say(NameOf(speaker) + ": " + text, Color.White);
 					break;
 				case "feed.add":
 					var item = m.GetProperty("item");
@@ -168,6 +175,7 @@ namespace TerrAgents.Systems
 			info.Active = a.TryGetProperty("active", out var act) && act.ValueKind == JsonValueKind.True;
 			info.Paused = a.TryGetProperty("paused", out var p) && p.ValueKind == JsonValueKind.True;
 			info.Color = ParseColor(Str(a, "color"));
+			info.Energy = a.TryGetProperty("energy", out var en) && en.ValueKind == JsonValueKind.Number ? (float)en.GetDouble() : -1f;
 		}
 
 		private static void Decision(JsonElement d, bool quiet)

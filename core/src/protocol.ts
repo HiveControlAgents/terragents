@@ -95,6 +95,7 @@ export const Agent = z.object({
   active: z.boolean().describe('false = off shift (not on the current team, or stopped by the user); render idle in the lounge'),
   engine: z.enum(['claude', 'codex']).optional().describe('which engine runs this agent (absent: the sim)'),
   model: z.string().optional().describe('the model it runs, for display, e.g. "Opus 5.5" or "GPT-6 Astra" (the real model once a turn reported it)'),
+  energy: z.number().min(0).max(1).optional().describe('TerrAgents: 1 = rested, 0 = worn out. Drains while the agent works, refills while it idles; steps of 0.05'),
 });
 export type Agent = z.infer<typeof Agent>;
 
@@ -221,6 +222,8 @@ export const ForemanStatus = z.object({
   showcase: z.boolean().optional().describe('sim: holding a static showcase state (`--showcase` or `--showcase late`)'),
   costUsd: z.number().optional().describe('claude: estimated spend of this profile (sum over all sessions, survives restarts)'),
   userName: z.string().optional().describe('the person the team works for, as the agents address them (UI: "<name> answered")'),
+  dayUsd: z.number().optional().describe('TerrAgents autopilot: estimated spend today'),
+  dayCapUsd: z.number().optional().describe('TerrAgents autopilot: what may be spent today before the team pauses and asks'),
 });
 export type ForemanStatus = z.infer<typeof ForemanStatus>;
 

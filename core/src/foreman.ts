@@ -86,6 +86,8 @@ export class Foreman {
   private logBuffers = new Map<string, LogEntry[]>();
   private logTimer: NodeJS.Timeout | undefined;
   private goalTimers = new Set<string>();
+  private energyTimer: NodeJS.Timeout | undefined;
+  private energy = new Map<string, number>();
   private closed = false;
 
   constructor(opts: ForemanOptions) {
@@ -192,7 +194,7 @@ export class Foreman {
   /** Patch an agent and broadcast if anything changed. */
   setAgent(
     id: string,
-    patch: Partial<Pick<Agent, 'state' | 'station' | 'activity' | 'paused' | 'active' | 'engine' | 'model'>> & {
+    patch: Partial<Pick<Agent, 'state' | 'station' | 'activity' | 'paused' | 'active' | 'engine' | 'model' | 'energy'>> & {
       taskId?: string | null;
       repoId?: string | null;
       worktree?: string | null;
@@ -200,7 +202,7 @@ export class Foreman {
   ): Agent {
     const a = this.requireAgent(id);
     let changed = false;
-    const set = <K extends 'state' | 'station' | 'activity' | 'paused' | 'active' | 'engine' | 'model'>(k: K, v: Agent[K] | undefined) => {
+    const set = <K extends 'state' | 'station' | 'activity' | 'paused' | 'active' | 'engine' | 'model' | 'energy'>(k: K, v: Agent[K] | undefined) => {
       if (v !== undefined && a[k] !== v) {
         a[k] = v;
         changed = true;
@@ -213,6 +215,7 @@ export class Foreman {
     set('active', patch.active);
     set('engine', patch.engine);
     set('model', patch.model);
+    set('energy', patch.energy);
     for (const k of ['taskId', 'repoId', 'worktree'] as const) {
       const v = patch[k];
       if (v === undefined) continue;
@@ -622,6 +625,23 @@ export class Foreman {
     if (action === 'spawn' && arg) this.taskAction(arg, 'reassign', id);
   }
 
+  // ---- energy (TerrAgents) -------------------------------------------------------------------
+
+  /**
+   * Workload shown as energy: -1% per minute while an agent works, +4% per minute while it idles or
+   * rests in the lounge. Purely a view of how long it has been busy; nothing is decided from it.
+   */
+  tickEnergy(seconds: number): void {
+    for (const a of this.agents()) {
+      if (!a.active) continue;
+      const working = !a.paused && a.station !== 'lounge' && a.state !== 'idle' && a.state !== 'done';
+      const prev = this.energy.get(a.id) ?? a.energy ?? 1;
+      const next = Math.max(0, Math.min(1, prev + ((working ? -1 : 4) / 100) * (seconds / 60)));
+      this.energy.set(a.id, next);
+      this.setAgent(a.id, { energy: Math.round(next * 20) / 20 });
+    }
+  }
+
   // ---- lifecycle ----------------------------------------------------------------------------
 
   async start(backend: Backend): Promise<void> {
@@ -642,6 +662,8 @@ export class Foreman {
       await this.repos.refresh(r.id).catch((e) => this.log.warn(`refresh ${r.id}: ${(e as Error).message}`));
     }
     this.repos.startPolling(this.config.repoPollMs);
+    this.energyTimer = setInterval(() => this.tickEnergy(15), 15_000);
+    this.energyTimer.unref?.();
     await backend.start();
   }
 
@@ -650,6 +672,7 @@ export class Foreman {
     this.closed = true;
     this.repos.stopPolling();
     this.autopilot?.stop();
+    if (this.energyTimer) clearInterval(this.energyTimer);
     try {
       await this.backend?.stop();
     } catch (e) {

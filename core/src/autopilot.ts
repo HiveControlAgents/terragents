@@ -274,6 +274,8 @@ export class Autopilot {
         this.resumeAgents();
       }
     }
+    const round = (n: number) => Math.round(n * 100) / 100;
+    if (this.policy.dailyUsd) this.fm.setStatus({ dayUsd: round(this.spentToday()), dayCapUsd: round(s.allowanceUsd) }); // unchanged values do not re-emit
     if (!this.policy.dailyUsd || s.budgetDecision || this.spentToday() < s.allowanceUsd) return;
     s.pausedByBudget = this.fm.agents().filter((a) => a.active && !a.paused).map((a) => a.id);
     for (const id of s.pausedByBudget) void Promise.resolve(this.fm.agentAction(id, 'pause')).catch((e) => this.fm.log.warn(`pause ${id}: ${(e as Error).message}`));

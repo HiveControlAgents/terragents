@@ -54,6 +54,7 @@ Exact option labels: merge decisions use `Merge`, `Request changes`, `Reject`; p
 | `active` | boolean | yes | false = off shift (not on the current team, or stopped by the user); render idle in the lounge |
 | `engine` | `claude` \| `codex` | no | which engine runs this agent (absent: the sim) |
 | `model` | string | no | the model it runs, for display, e.g. "Opus 5.5" or "GPT-6 Astra" (the real model once a turn reported it) |
+| `energy` | number | no | TerrAgents: 1 = rested, 0 = worn out. Drains while the agent works, refills while it idles; steps of 0.05 |
 
 ### <a id="logentry"></a>LogEntry
 
@@ -187,6 +188,8 @@ Exact option labels: merge decisions use `Merge`, `Request changes`, `Reject`; p
 | `showcase` | boolean | no | sim: holding a static showcase state (`--showcase` or `--showcase late`) |
 | `costUsd` | number | no | claude: estimated spend of this profile (sum over all sessions, survives restarts) |
 | `userName` | string | no | the person the team works for, as the agents address them (UI: "<name> answered") |
+| `dayUsd` | number | no | TerrAgents autopilot: estimated spend today |
+| `dayCapUsd` | number | no | TerrAgents autopilot: what may be spent today before the team pauses and asks |
 
 ### <a id="agentlogs"></a>AgentLogs
 
