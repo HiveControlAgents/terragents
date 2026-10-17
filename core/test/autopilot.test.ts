@@ -119,6 +119,16 @@ describe('Autopilot', () => {
     expect(fm.tasks.get(t.id)!.status).toBe('cancelled');
   });
 
+  it('never cancels a task that already reached review', () => {
+    const { fm } = setup({ maxUsdPerTask: 1 });
+    const t = fm.tasks.create({ title: 'pronta', createdBy: 'marlow', assignee: 'kit' });
+    fm.tasks.setStatus(t.id, 'doing', { force: true });
+    fm.tasks.setStatus(t.id, 'review', { force: true });
+    fm.store.data.sessions[`kit:${t.id}`] = { turns: 3, costUsd: 1.2, updatedAt: 0 };
+    ap.checkTasks();
+    expect(fm.tasks.get(t.id)!.status).toBe('review');
+  });
+
   it('loads policy.json over the defaults and rejects bad values', () => {
     home = tempDir();
     const f = path.join(home, 'policy.json');

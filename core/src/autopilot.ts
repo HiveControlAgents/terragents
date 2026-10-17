@@ -233,7 +233,8 @@ export class Autopilot {
   checkTasks(): void {
     const now = this.fm.ctx.now();
     for (const t of this.fm.tasks.list()) {
-      if (t.status !== 'doing' && t.status !== 'review') continue;
+      // only work in progress: a task in review already finished, and cancelling it threw the work away
+      if (t.status !== 'doing') continue;
       const start = this.state.taskStart[t.id];
       const minutes = start === undefined ? 0 : (now - start) / 60_000;
       const usd = this.taskCostUsd(t.id);
@@ -318,6 +319,15 @@ export class Autopilot {
 async function gitOpenPr(repoPath: string, branch: string, title: string, body: string): Promise<string> {
   const env = { ...process.env, GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never' };
   const head = `terragents/${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}`;
+  // bring in what reached origin since the last PR (earlier PRs merged there, other people's work):
+  // otherwise every new PR repeats old commits and conflicts with the base
+  const fetch = await run('git', ['-c', `core.hooksPath=${NO_HOOKS_DIR}`, 'fetch', 'origin', branch], { cwd: repoPath, env, timeoutMs: 120_000 });
+  if (fetch.code !== 0) throw new Error((fetch.stderr || fetch.stdout).trim().split('\n').pop() ?? 'git fetch failed');
+  const merge = await run('git', ['-c', `core.hooksPath=${NO_HOOKS_DIR}`, 'merge', '--no-edit', `origin/${branch}`], { cwd: repoPath, env, timeoutMs: 120_000 });
+  if (merge.code !== 0) {
+    await run('git', ['merge', '--abort'], { cwd: repoPath, env, timeoutMs: 60_000 });
+    throw new Error(`origin/${branch} conflita com o ${branch} local; resolva e abra o PR à mão (${(merge.stdout || merge.stderr).trim().split('\n').pop()})`);
+  }
   const push = await run('git', ['-c', `core.hooksPath=${NO_HOOKS_DIR}`, 'push', 'origin', `${branch}:refs/heads/${head}`], { cwd: repoPath, env, timeoutMs: 120_000 });
   if (push.code !== 0) throw new Error((push.stderr || push.stdout).trim().split('\n').pop() ?? 'git push failed');
   const pr = await run('gh', ['pr', 'create', '--base', branch, '--head', head, '--title', title, '--body', body], { cwd: repoPath, env, timeoutMs: 120_000 });
