@@ -110,6 +110,8 @@ export interface Config {
   /** autopilot answers decisions per <home>/policy.json (default: on, except the sim) */
   autopilot: boolean;
   policyFile: string;
+  /** the user read DISCLAIMER.md: real agents may run with the autopilot (merges with no human review) */
+  acceptRisk: boolean;
 }
 
 type Flags = Record<string, string | boolean>;
@@ -210,7 +212,7 @@ export const KNOWN_FLAGS = new Set([
   'lead-model', 'worker-model', 'effort', 'lead-effort', 'max-turns', 'max-turns-lead', 'max-turns-worker',
   'max-concurrent', 'ci', 'max-budget', 'resume', 'lead-review', 'speed', 'seed', 'showcase', 'auto-answer',
   'ambient', 'lead-read-commands', 'lead-engine', 'worker-engine', 'engines', 'codex-path', 'codex-model', 'codex-lead-model',
-  'codex-worker-model', 'codex-effort', 'codex-lead-effort', 'autopilot', 'policy',
+  'codex-worker-model', 'codex-effort', 'codex-lead-effort', 'autopilot', 'policy', 'accept-risk',
 ]);
 
 function engineName(v: unknown, d: EngineName, what: string): EngineName {
@@ -336,6 +338,7 @@ export function loadConfig(argv: string[], env: NodeJS.ProcessEnv = process.env)
     },
     autopilot: bool(flags.autopilot, backend !== 'sim'),
     policyFile: str(flags.policy) ?? path.join(home, 'policy.json'),
+    acceptRisk: bool(flags['accept-risk'] ?? env.TERRAGENTS_ACCEPT_RISK ?? file.acceptRisk, false),
   };
   if (cfg.sim.showcase) cfg.autostart = true;
   return cfg;
@@ -372,6 +375,8 @@ usage: npm run start -- [options]
   --auto-answer            answer the scenario's own decisions (unattended runs)
   --[no-]autopilot         answer every decision per policy.json (default: on, off for sim)
   --policy <file>          autopilot policy (default <home>/policy.json)
+  --accept-risk            required for real agents with the autopilot: you read DISCLAIMER.md and accept
+                           that merges happen with no human review (env TERRAGENTS_ACCEPT_RISK=1)
   --no-ambient             no idle chatter while waiting on you
 
  claude backend

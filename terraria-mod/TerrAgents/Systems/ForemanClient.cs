@@ -133,7 +133,7 @@ namespace TerrAgents.Systems
 					foreach (var a in m.GetProperty("agents").EnumerateArray()) Upsert(a);
 					OpenDecisions.Clear();
 					foreach (var d in m.GetProperty("decisions").EnumerateArray()) Decision(d, quiet: true);
-					Say("TerrAgents conectado: " + Agents.Count + " agentes.", Color.LightGreen);
+					Say("TerrAgents conectado: " + Agents.Count + " agentes. Projeto de fã, use por sua conta e risco (DISCLAIMER.md).", Color.LightGreen);
 					break;
 				case "agent.upsert":
 					Upsert(m.GetProperty("agent"));

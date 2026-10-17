@@ -3,3 +3,6 @@ O mod só desenha: conecta no TerrAgents Core (ws://127.0.0.1:7878) e mostra cad
 que anda até a estação do que está fazendo (mesa, biblioteca, terminal, bancada de testes, merge).
 Comandos: /ta status, /ta meta <texto>, /ta responder <id> <opção>.
 Precisa do TerrAgents Core rodando no mesmo PC.
+
+Projeto de fã, não oficial, sem ligação com a Re-Logic. Use por sua conta e risco: os autores não se
+responsabilizam por merges automáticos, ações dos agentes ou qualquer dano. Veja DISCLAIMER.md no repositório.

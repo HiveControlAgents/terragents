@@ -39,6 +39,7 @@
   #feed .merge, #feed .goal { color: var(--green); } #feed .error { color: var(--red); } #feed .ci, #feed .task { color: var(--blue); }
   #feed time { color: var(--muted); margin-right: 6px; }
   .empty { color: var(--muted); }
+  .risk { margin: 0; padding: 8px 14px; font-size: 11px; color: var(--muted); border-top: 2px solid var(--line); }
   @media (max-width: 820px) { main { grid-template-columns: 1fr; grid-template-rows: 46vh minmax(0, 1fr); } aside { border-left: 0; border-top: 2px solid var(--line); } }
 </style>
 </head>
@@ -63,6 +64,7 @@
     </section>
     <div class="h2" style="margin:12px 14px 6px">Feed</div>
     <div id="feed"></div>
+    <p class="risk">Projeto experimental. Merges automáticos e ações dos agentes são por sua conta e risco; os autores não se responsabilizam. Veja DISCLAIMER.md.</p>
   </aside>
 </main>
 <script>

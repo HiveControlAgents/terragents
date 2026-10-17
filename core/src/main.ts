@@ -62,9 +62,17 @@ export async function main(argv: string[]): Promise<void> {
   }
 
   const foreman = new Foreman({ config: cfg, logger: log });
+  if (cfg.autopilot && cfg.backend !== 'sim' && !cfg.acceptRisk) {
+    log.error('Real agents with the autopilot merge and push with NO human review. The authors accept no liability');
+    log.error('for automatic merges, agent actions, data loss or costs (see DISCLAIMER.md). To go on, run again with');
+    log.error('--accept-risk (or TERRAGENTS_ACCEPT_RISK=1), or use --no-autopilot to approve every decision yourself.');
+    process.exitCode = 1;
+    return;
+  }
   if (cfg.autopilot) {
     foreman.autopilot = new Autopilot(foreman, loadPolicy(cfg.policyFile));
     log.info(`autopilot on (policy: ${cfg.policyFile}${fs.existsSync(cfg.policyFile) ? '' : ', defaults'})`);
+    if (cfg.backend !== 'sim') log.warn('autopilot: merges and pushes happen with no human review, at your own risk (DISCLAIMER.md)');
   }
   const backend = cfg.backend === 'sim' ? new SimBackend(foreman, cfg.sim) : createTeam(foreman, cfg);
   const server = new ForemanServer(foreman, { host: cfg.host, port: cfg.port, allowBrowserOrigins: cfg.allowBrowserOrigins, viewerFile: path.join(cfg.projectRoot, 'viewer', 'index.html'), validateOutbound: cfg.debug, log });

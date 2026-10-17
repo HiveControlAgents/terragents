@@ -5,6 +5,12 @@ Você dá a meta. O líder planeja, os trabalhadores programam cada um no seu wo
 o merge acontece e o push sai, sem ninguém aprovar nada no meio. Você assiste pelo navegador ou de dentro
 do Terraria.
 
+> [!WARNING]
+> **Use por sua conta e risco.** É um projeto experimental de fã. Com o piloto automático, agentes de IA fazem
+> merge e push no seu repositório sem revisão humana. Os autores não se responsabilizam por merges automáticos,
+> erros ou ações dos agentes, perda de dados, custos ou qualquer outro dano. Leia o [DISCLAIMER.md](DISCLAIMER.md)
+> antes de usar com agentes de verdade.
+
 ![O salão de guilda no navegador, com o time trabalhando](docs/img/navegador.jpg)
 
 *English summary at the end.*
@@ -55,8 +61,11 @@ num repositório de demonstração. Você vê o salão de guilda, o feed e as de
 3. Rode, apontando para o seu repositório e o comando de testes dele:
 
 ```bash
-npm run start -- --backend claude --repo /caminho/do/seu/repo --ci "npm test" --goal "Sua meta aqui"
+npm run start -- --backend claude --accept-risk --repo /caminho/do/seu/repo --ci "npm test" --goal "Sua meta aqui"
 ```
+
+Sem `--accept-risk` (ou `TERRAGENTS_ACCEPT_RISK=1`), o Core se recusa a ligar agentes de verdade com o piloto
+automático: a flag é você dizendo que leu o [aviso](DISCLAIMER.md) e assume os riscos.
 
 Opções úteis: `--workers 2`, `--lead-model sonnet --worker-model sonnet`, `--effort low` (mais barato),
 `--no-autopilot` (você mesmo aprova cada decisão), `--help` para todas.
@@ -113,6 +122,13 @@ Testes: `cd core && npm test`.
 - Nada do Terraria (sprites, sons) é distribuído aqui. O mod usa o jogo que cada pessoa tem.
 - Nunca coloque chaves no repositório. A chave fica na variável de ambiente.
 
+## Responsabilidade
+
+O TerrAgents é distribuído "no estado em que se encontra", sem garantia de nenhum tipo (licença MIT). Quem usa
+assume todos os riscos: merges automáticos, código errado, arquivos apagados, falhas de segurança, custos de API e
+qualquer ação dos agentes. Os autores e contribuidores não respondem por nenhum dano. Detalhes em
+[DISCLAIMER.md](DISCLAIMER.md). O mod é um projeto de fã, não oficial, sem ligação com a Re-Logic.
+
 ## Origem e licença
 
 Fork do [AgentCraft](https://github.com/blendi-remade/agentcraft) (MIT), que mostrava o mesmo time dentro do
@@ -130,3 +146,7 @@ continue. You watch the team as a guild hall in the browser (`http://127.0.0.1:7
 through a tModLoader mod.
 
 Quick start with no cost: `cd core && npm install && npm run demo`, then open the page. The license is MIT.
+
+**Use at your own risk.** Real agents with the autopilot need `--accept-risk`. The authors accept no liability
+for automatic merges, agent mistakes or actions, data loss, costs or any other damage. See
+[DISCLAIMER.md](DISCLAIMER.md). Unofficial fan project, not affiliated with Re-Logic.
