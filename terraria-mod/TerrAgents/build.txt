@@ -1,0 +1,8 @@
+displayName = TerrAgents
+author = Isaque Moutta
+version = 0.1
+homepage = https://github.com/HiveControlAgents/terragents
+hideCode = false
+hideResources = false
+includeSource = true
+side = Client

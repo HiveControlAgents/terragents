@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Template padrão de mod do tModLoader: a pasta precisa estar em ModSources/TerrAgents -->
+  <Import Project="..\tModLoader.targets" />
+  <PropertyGroup>
+    <AssemblyName>TerrAgents</AssemblyName>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>
