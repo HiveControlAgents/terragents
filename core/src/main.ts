@@ -67,7 +67,7 @@ export async function main(argv: string[]): Promise<void> {
     log.info(`autopilot on (policy: ${cfg.policyFile}${fs.existsSync(cfg.policyFile) ? '' : ', defaults'})`);
   }
   const backend = cfg.backend === 'sim' ? new SimBackend(foreman, cfg.sim) : createTeam(foreman, cfg);
-  const server = new ForemanServer(foreman, { host: cfg.host, port: cfg.port, allowBrowserOrigins: cfg.allowBrowserOrigins, validateOutbound: cfg.debug, log });
+  const server = new ForemanServer(foreman, { host: cfg.host, port: cfg.port, allowBrowserOrigins: cfg.allowBrowserOrigins, viewerFile: path.join(cfg.projectRoot, 'viewer', 'index.html'), validateOutbound: cfg.debug, log });
 
   try {
     await server.start();
@@ -84,6 +84,7 @@ export async function main(argv: string[]): Promise<void> {
   await claimRunFiles(cfg.home, cfg.dataDir, { pid: process.pid, port: server.port, host: cfg.host, backend: cfg.backend, profile: cfg.profile, version: FOREMAN_VERSION, startedAt: new Date().toISOString() });
 
   log.info(`AgentCraft Foreman ${FOREMAN_VERSION} | backend ${cfg.backend} | ws://${cfg.host}:${server.port} | state ${cfg.dataDir}`);
+  log.info(`TerrAgents no navegador: http://${cfg.host}:${server.port}/`);
 
   let shuttingDown = false;
   const shutdown = async (sig: string) => {

@@ -1,7 +1,8 @@
 // WebSocket server: ws://127.0.0.1:<port>. Clients send `hello` and get a `snapshot`, then every
 // upsert. Multiple clients (the mod + CLI tools) are supported. Any browser origin (also `null`) and
 // non-loopback Host headers are rejected, so a web page cannot drive your agents.
-import type { IncomingMessage } from 'node:http';
+import fs from 'node:fs';
+import http, { type IncomingMessage } from 'node:http';
 import { WebSocketServer, type WebSocket } from 'ws';
 import type { Logger } from './context.js';
 import type { Foreman } from './foreman.js';
@@ -11,6 +12,8 @@ export interface ServerOptions {
   host: string;
   port: number;
   allowBrowserOrigins?: boolean;
+  /** the browser view served at http://<host>:<port>/ (its own origin may open the WebSocket) */
+  viewerFile?: string;
   /** validate every outbound message against the schema (tests/dev) */
   validateOutbound?: boolean;
   log: Logger;
@@ -25,9 +28,10 @@ const LOOPBACK_HOST = /^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/i;
  * file:// page sends the literal `null`, so any Origin at all - `null` included - is a web page.
  * The Host must be a loopback name, so a DNS-rebinding page cannot reach us under its own name.
  */
-export function refuseReason(req: IncomingMessage, allowBrowserOrigins = false): string | undefined {
+export function refuseReason(req: IncomingMessage, allowBrowserOrigins = false, selfOrigins: string[] = []): string | undefined {
   const origin = req.headers.origin;
-  if (origin !== undefined && !allowBrowserOrigins) return `browser origin ${origin || '(empty)'}`;
+  // our own page (served below, same origin) is the one browser page allowed in
+  if (origin !== undefined && !allowBrowserOrigins && !selfOrigins.includes(origin)) return `browser origin ${origin || '(empty)'}`;
   const host = req.headers.host ?? '';
   if (!allowBrowserOrigins && !LOOPBACK_HOST.test(host)) return `non-loopback Host header ${host || '(none)'}`;
   return undefined;
@@ -43,6 +47,7 @@ interface Client {
 
 export class ForemanServer {
   private wss: WebSocketServer | undefined;
+  private http: http.Server | undefined;
   private clients = new Set<Client>();
   private unsub: (() => void) | undefined;
   private heartbeat: NodeJS.Timeout | undefined;
@@ -60,22 +65,25 @@ export class ForemanServer {
 
   start(): Promise<number> {
     return new Promise((resolve, reject) => {
+      const httpServer = http.createServer((req, res) => this.serveViewer(req, res));
       const wss = new WebSocketServer({
-        host: this.opts.host,
-        port: this.opts.port,
+        server: httpServer,
         maxPayload: 4 * 1024 * 1024,
         verifyClient: (info: { origin?: string; req: IncomingMessage }) => {
-          const why = refuseReason(info.req, !!this.opts.allowBrowserOrigins);
+          const self = [`http://127.0.0.1:${this.port}`, `http://localhost:${this.port}`];
+          const why = refuseReason(info.req, !!this.opts.allowBrowserOrigins, self);
           if (!why) return true;
           this.opts.log.warn(`rejected WebSocket: ${why}`);
           return false;
         },
       });
       this.wss = wss;
-      wss.once('error', (e) => reject(e));
-      wss.once('listening', () => {
-        const addr = wss.address();
+      this.http = httpServer;
+      httpServer.once('error', (e) => reject(e));
+      httpServer.listen(this.opts.port, this.opts.host, () => {
+        const addr = httpServer.address();
         this.port = typeof addr === 'object' && addr ? addr.port : this.opts.port;
+        httpServer.on('error', (e) => this.opts.log.error(`http server: ${e.message}`));
         wss.on('error', (e) => this.opts.log.error(`ws server: ${e.message}`));
         resolve(this.port);
       });
@@ -188,5 +196,27 @@ export class ForemanServer {
         resolve();
       }, 1000).unref?.();
     });
+    await new Promise<void>((resolve) => (this.http ? this.http.close(() => resolve()) : resolve()));
+  }
+
+  /** GET / serves the browser view; nothing else is served. Loopback Host only (DNS rebinding). */
+  private serveViewer(req: IncomingMessage, res: http.ServerResponse): void {
+    const host = req.headers.host ?? '';
+    const file = this.opts.viewerFile;
+    if (!LOOPBACK_HOST.test(host)) {
+      res.writeHead(403).end();
+      return;
+    }
+    if (req.method !== 'GET' || (req.url !== '/' && req.url !== '/index.html') || !file || !fs.existsSync(file)) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('TerrAgents: nada aqui');
+      return;
+    }
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Frame-Options': 'DENY',
+      'Content-Security-Policy': `default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src ws://${host}; img-src 'self' data:; frame-ancestors 'none'`,
+    });
+    fs.createReadStream(file).pipe(res);
   }
 }

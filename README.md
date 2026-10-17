@@ -26,6 +26,12 @@ npm run tui         # cliente de terminal que fala o protocolo
 
 Com agentes de verdade: `ANTHROPIC_API_KEY` no ambiente e `npm run start -- --backend claude --repo <caminho>`.
 
+## Ver no navegador
+
+Com o Core ligado, abra http://127.0.0.1:7878/ : o salão de guilda com os agentes andando, a meta, o feed,
+as decisões com botões e uma caixa para mandar metas. Não precisa do Terraria aberto. Só a página que o
+próprio Core serve pode abrir o WebSocket; outros sites continuam bloqueados.
+
 ## Piloto automático (fase 1)
 
 Com `--backend claude` ou `codex`, ninguém precisa responder nada: o piloto automático (`core/src/autopilot.ts`)
