@@ -44,7 +44,7 @@ namespace TerrAgents.Systems
 			return Built ? Origin.X + i * Room + Room / 2 : Main.spawnTileX + (i - 3) * 15;
 		}
 
-		/// <summary>Where an agent stands inside its office when others share it: 0, -3, +3, -5, +5 tiles.</summary>
+		/// <summary>Where an agent stands inside its office when others share it.</summary>
 		public static int Slot(AgentInfo agent)
 		{
 			int n = 0;
@@ -52,7 +52,7 @@ namespace TerrAgents.Systems
 				if (other.Active && other.Station == agent.Station && string.CompareOrdinal(other.Id, agent.Id) < 0) n++;
 			int side = n % 2 == 1 ? -1 : 1;
 			int step = (n + 1) / 2;
-			return side * Math.Min(step * 3, 5);
+			return side * Math.Min(step * 2, 5); // 0, -2, +2, -4, +4, -5, +5: up to 7 fit in one office
 		}
 
 		public static int FloorY => Built ? Origin.Y : Main.spawnTileY;
