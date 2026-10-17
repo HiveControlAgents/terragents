@@ -1,15 +1,16 @@
 {
-  "name": "agentcraft-foreman",
+  "name": "terragents-core",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
-  "description": "AgentCraft Foreman: multi-agent orchestrator (Claude Agent SDK) that the Minecraft mod renders.",
+  "description": "TerrAgents Core: a team of autonomous Claude agents working on a real git repo, shown as a city in the browser or in Terraria (fork of the AgentCraft Foreman).",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "start": "node --import tsx src/main.ts",
+    "demo": "node --import tsx src/main.ts --backend sim --reset --autostart --auto-answer --speed 0.5",
     "tui": "node --import tsx scripts/fake-mod.ts",
     "answer": "node --import tsx scripts/answer.ts",
     "send": "node --import tsx scripts/send.ts",

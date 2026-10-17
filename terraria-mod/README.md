@@ -7,7 +7,14 @@ Não decide nada. Usa o sprite do Guia do próprio Terraria da pessoa; nenhum ar
 
 1. Instale o tModLoader pela Steam (grátis, precisa do Terraria) e abra uma vez.
 2. Copie `terraria-mod/TerrAgents` para `Documentos/My Games/Terraria/tModLoader/ModSources/TerrAgents`.
-3. No tModLoader: Workshop, Develop Mods, TerrAgents, Build + Reload.
+3. No tModLoader: Workshop, Develop Mods, TerrAgents, Build + Reload. Isso precisa do .NET 8 SDK instalado.
+   Sem o SDK, feche o tModLoader e compile pela linha de comando, com o .NET que vem junto com ele:
+
+   ```
+   cd "C:\Program Files (x86)\Steam\steamapps\common	ModLoader"
+   dotnet\dotnet.exe tModLoader.dll -server -build "%USERPROFILE%\Documents\My Games\Terraria	ModLoader\ModSources\TerrAgents"
+   ```
+
 4. Ligue o Core e entre num mundo single player.
 
 ## No jogo

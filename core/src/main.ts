@@ -83,7 +83,7 @@ export async function main(argv: string[]): Promise<void> {
 
   await claimRunFiles(cfg.home, cfg.dataDir, { pid: process.pid, port: server.port, host: cfg.host, backend: cfg.backend, profile: cfg.profile, version: FOREMAN_VERSION, startedAt: new Date().toISOString() });
 
-  log.info(`AgentCraft Foreman ${FOREMAN_VERSION} | backend ${cfg.backend} | ws://${cfg.host}:${server.port} | state ${cfg.dataDir}`);
+  log.info(`TerrAgents Core ${FOREMAN_VERSION} | backend ${cfg.backend} | ws://${cfg.host}:${server.port} | state ${cfg.dataDir}`);
   log.info(`TerrAgents no navegador: http://${cfg.host}:${server.port}/`);
 
   let shuttingDown = false;

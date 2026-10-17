@@ -1,17 +1,16 @@
 # Agentaria Architecture v0.1 (TerrAgents)
 
-Documento vivo, com os diagramas: https://claude.ai/code/artifact/3942b2dd-f5cf-4fd5-beac-119db28df4ea
+Primeira arquitetura do projeto (outubro de 2026). O README tem o estado atual.
 
-## Decisões tomadas em 17/10/2026
+## Decisões de base
 
 | Decisão | Escolha |
 | --- | --- |
 | Núcleo | Fork do Foreman do AgentCraft (MIT, Node 22 + TypeScript) |
 | Nome | TerrAgents |
-| Repositório | `HiveControlAgents/terragents`, privado até a fase 6 |
 | Push para o remoto | Automático, feito pelo Core depois do merge |
-| Teto de gasto diário | Ao atingir, o Core pausa e pergunta ao Isaque se continua |
-| Projeto-cobaia | A Colmeia inteira (`colmeia-agentes`) |
+| Teto de gasto diário | Ao atingir, o Core pausa e pergunta ao humano se continua |
+| Primeiro teste real | Um sistema de agentes em Python com testes (primeira meta entregue sozinha pelo time) |
 | Licença | MIT, mantendo o copyright do AgentCraft (`NOTICE`) |
 
 ## Travas que substituem a aprovação humana

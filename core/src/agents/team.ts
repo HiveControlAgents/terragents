@@ -115,7 +115,7 @@ export function agentEnv(base: NodeJS.ProcessEnv = process.env, who: { agentId?:
   return withGitSafety(
     base,
     {
-      CLAUDE_AGENT_SDK_CLIENT_APP: `agentcraft-foreman/${FOREMAN_VERSION}`,
+      CLAUDE_AGENT_SDK_CLIENT_APP: `terragents-core/${FOREMAN_VERSION}`,
       CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR: '1',
       ...(who.agentId ? (agentGitIdentity(who.agentId) as Record<string, string>) : {}),
     },

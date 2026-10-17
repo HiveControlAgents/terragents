@@ -9,7 +9,7 @@ import type { EffortLevel } from '@anthropic-ai/claude-agent-sdk';
 
 export const FOREMAN_VERSION = '0.1.0';
 
-/** Repo root of the AgentCraft project (foreman/src/config.ts -> ../..). */
+/** Repo root of the TerrAgents project (core/src/config.ts -> ../..). */
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 export interface ClaudeConfig {
@@ -248,7 +248,7 @@ function checkArgs(flags: Flags, positional: string[]): void {
 export function loadConfig(argv: string[], env: NodeJS.ProcessEnv = process.env): Config {
   const { flags, positional } = parseFlags(argv);
   checkArgs(flags, positional);
-  const home = path.resolve(str(flags.home) ?? env.AGENTCRAFT_HOME ?? path.join(os.homedir(), '.agentcraft'));
+  const home = path.resolve(str(flags.home) ?? env.TERRAGENTS_HOME ?? env.AGENTCRAFT_HOME ?? path.join(os.homedir(), '.terragents'));
   const file = readJson<Record<string, unknown>>(path.join(home, 'config.json')) ?? {};
   const fileClaude = (file.claude ?? {}) as Record<string, unknown>;
   const fileSim = (file.sim ?? {}) as Record<string, unknown>;
@@ -341,7 +341,7 @@ export function loadConfig(argv: string[], env: NodeJS.ProcessEnv = process.env)
   return cfg;
 }
 
-export const HELP = `AgentCraft Foreman ${FOREMAN_VERSION}
+export const HELP = `TerrAgents Core ${FOREMAN_VERSION} (fork of the AgentCraft Foreman)
 
 usage: npm run start -- [options]
 
@@ -349,7 +349,7 @@ usage: npm run start -- [options]
   --repo <path>[,<path>]   register local git repo(s) at start (sim: defaults to a fresh sandbox/sim-demo)
   --goal "<text>"          submit a goal right away
   --port <n>               WebSocket port (default 7878, env AGENTCRAFT_PORT)
-  --home <dir>             state root (default ~/.agentcraft, env AGENTCRAFT_HOME)
+  --home <dir>             state root (default ~/.terragents, env TERRAGENTS_HOME)
   --user-name <name>       your name, as the agents address you (default: your OS user name,
                            env AGENTCRAFT_USER_NAME, config.json "userName")
   --profile <name>         state profile under home (default: backend name)

@@ -1,4 +1,4 @@
-// Autopilot: answers the decisions the AgentCraft Foreman would put in front of a human, following
+// Autopilot: answers the decisions the Core (forked from the AgentCraft Foreman) would put in front of a human, following
 // <home>/policy.json, so the team runs with nobody watching. The one decision it never answers is
 // its own daily budget question: when the day's spend reaches the cap it pauses every agent and
 // asks the user whether to continue.

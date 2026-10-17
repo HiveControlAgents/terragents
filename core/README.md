@@ -1,4 +1,9 @@
-# AgentCraft Foreman
+# TerrAgents Core
+
+The Core of TerrAgents, forked from the AgentCraft Foreman (MIT). On top of the original it adds the
+autopilot (`src/autopilot.ts`, decisions answered by `policy.json`) and serves the browser view
+(`viewer/index.html`) on the same port. The text below is the original Foreman documentation, still accurate for
+the engine; where it says Minecraft mod, read browser view or Terraria mod.
 
 The Foreman is the brain of AgentCraft: a Node 22 + TypeScript service that runs a team of Claude
 agents (one lead, up to five workers) on a real git repo and streams everything to the Minecraft
@@ -26,7 +31,7 @@ Minecraft is closed, and survives restarts.
 ## Run it
 
 ```sh
-cd foreman
+cd core
 npm install
 
 # real agents: needs ANTHROPIC_API_KEY (or CLAUDE_CODE_USE_BEDROCK / _VERTEX / _FOUNDRY)
